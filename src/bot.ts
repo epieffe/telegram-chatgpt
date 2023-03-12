@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { Api, Bot, Context } from "grammy";
 
 import * as ai from './ai/openai';
@@ -14,13 +15,15 @@ export default bot;
 bot.hears(/\/chat (.+)/, async (ctx) => {
   // Check if user has permission to chat with the bot
   if (!checkPermission(ctx, bot.api)) return;
-
+  // Generate randon unique identifier for this request
+  const uuid = randomUUID();
   const message = ctx.match[1];
-  console.log(`Received chat request: user_id=${ctx.from.id} username=${ctx.from.username} chat_id=${ctx.chat.id} chat_type=${ctx.chat.type} message="${message}"`);
+  console.log(`Received chat request: user_id=${ctx.from.id} username=${ctx.from.username} chat_id=${ctx.chat.id} chat_type=${ctx.chat.type} request_uuid=${uuid} message="${message}"`);
   // Pretend that the bot is typing
   ctx.replyWithChatAction('typing');
   // Retrieve response from AI
   const response = await ai.chat(message);
+  console.log(`Sending response: request_uuid=${uuid} status=${response.status} response=${response.message}`)
   ctx.reply(response.message);
 });
 
