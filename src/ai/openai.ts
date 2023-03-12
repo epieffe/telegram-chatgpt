@@ -1,27 +1,32 @@
 
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from 'openai';
-import { OpenAIResponseError } from './errors';
+import { ChatResponse } from './interfaces';
 
 const openai = new OpenAIApi(new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 }));
 
-export async function chat(input_text: string): Promise<string | OpenAIResponseError> {
+export async function chat(input_text: string): Promise<ChatResponse> {
 	try {
     const response = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
       messages: createChatPrompt(input_text)
     });
 
-    const msg = response.data.choices[0].message?.content;
-    return msg || new OpenAIResponseError(JSON.stringify(response.data.choices[0]));
+    const message = response.data.choices[0].message?.content;
+    return {
+      status: 200,
+      message: message || JSON.stringify(response.data.choices[0])
+    }
 
   } catch(error) {
+    console.error(`Error while retrieving chat response for message=${input_text}`, error);
     const message = error.response?.data?.error?.message;
     if (message) {
-      return new OpenAIResponseError(message);
+      const status = error.response.status;
+      return { status, message };
     } else {
-      return new OpenAIResponseError(`Unknown error: ${JSON.stringify(error)}`);
+      return { message: `Unknown error: ${JSON.stringify(error)}` };
     }
   }
 }
