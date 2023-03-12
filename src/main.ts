@@ -2,16 +2,8 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { OpenAIResponseError } from './ai/errors.js';
-import * as AI from './ai/openai';
+import { bot } from './bot';
 
-async function main() {
-    const response = await AI.chat("Chi ha scoperto l'America?");
-    if (response instanceof OpenAIResponseError) {
-        console.error(response.msg);
-    } else {
-        console.log(response);
-    }
-}
+bot.start();
 
-main();
+console.log("Telegram bot started")
