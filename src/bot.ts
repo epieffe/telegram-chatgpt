@@ -12,6 +12,7 @@ const WHITELISTED_USER_IDS = process.env.TELEGRAM_WHITELISTED_USER_IDS.split(','
 const bot = new Bot(process.env.TELEGRAM_TOKEN as string);
 export default bot;
 
+// Handle /chat command
 bot.hears(/\/chat (.+)/, async (ctx) => {
   // Check if user has permission to chat with the bot
   if (!checkPermission(ctx, bot.api)) return;
@@ -26,6 +27,11 @@ bot.hears(/\/chat (.+)/, async (ctx) => {
   console.log(`Sending response: request_uuid=${uuid} status=${response.status} response=${response.message}`)
   ctx.reply(response.message);
 });
+
+// Log unknown messages
+bot.on('message', (ctx) => {
+  console.warn(`Unknown message: user_id=${ctx.from.id} username=${ctx.from.username} chat_id=${ctx.chat.id} chat_type=${ctx.chat.type} message="${ctx.message.text}"`);
+})
 
 /**
  * Check if user has permission to chat with the bot
