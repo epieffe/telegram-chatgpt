@@ -1,24 +1,20 @@
 
-import { Configuration, CreateChatCompletionRequest, OpenAIApi } from 'openai';
+import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from 'openai';
 import { ChatResponse, DrawResponse } from './interfaces';
 
 const openai = new OpenAIApi(new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 }));
 
-function buildChatRequest(input_text: string): CreateChatCompletionRequest {
-  return {
-    model: "gpt-3.5-turbo",
-    messages: [
-      {"role": "system", "content": "Sei un assistente virtuale."},
-      {"role": "user", "content": input_text}
-    ]
-  };
-}
-
-export async function chat(input_text: string): Promise<ChatResponse> {
+export async function chat(messages: ChatCompletionRequestMessage[]): Promise<ChatResponse> {
 	try {
-    const response = await openai.createChatCompletion(buildChatRequest(input_text));
+    const response = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {"role": "system", "content": "Sei un assistente virtuale."},
+        ...messages
+      ]
+    });
     const message = response.data.choices[0].message?.content;
     return {
       status: 200,
@@ -27,7 +23,7 @@ export async function chat(input_text: string): Promise<ChatResponse> {
 
   } catch(error) {
     const response = unwrapError(error);
-    console.error(`Error while retrieving chat response for message=${input_text} status=${response.status} error=${response.message}`);
+    console.error(`Error while retrieving chat response for messages=${messages} status=${response.status} error=${response.message}`);
     return response;
   }
 }

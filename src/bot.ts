@@ -1,6 +1,8 @@
+import { Conversation, ConversationFlavor, conversations, createConversation } from '@grammyjs/conversations';
 import { randomUUID } from 'crypto';
-import { Api, Bot, Context } from "grammy";
+import { Api, Bot, Context, session } from "grammy";
 import { InputMediaPhoto } from 'grammy/types';
+import { ChatCompletionRequestMessage } from 'openai';
 
 import * as ai from './ai/openai';
 
@@ -10,8 +12,52 @@ const WHITELISTED_GROUP_ID = Number(process.env.TELEGRAM_WHITELISTED_GROUP_ID);
 // Whitelisted user can chat with the bot even if they are not member of the whitelisted group
 const WHITELISTED_USER_IDS = process.env.TELEGRAM_WHITELISTED_USER_IDS.split(',').map(id => Number(id));
 
-const bot = new Bot(process.env.TELEGRAM_TOKEN as string);
+const bot = new Bot<Context & ConversationFlavor>(process.env.TELEGRAM_TOKEN as string);
 export default bot;
+
+// Install the session plugin.
+bot.use(session({initial() {return {};}}));
+
+// Install the conversations plugin.
+bot.use(conversations());
+
+async function conversationBuilder(conversation: Conversation<Context>, ctx: Context) {
+  // Generate randon unique identifier for this conversation
+  const uuid = await conversation.external(() => randomUUID());
+  conversation.log(`Started new conversation: user_id=${ctx.from.id} username=${ctx.from.username} chat_id=${ctx.chat.id} conversation_uuid=${uuid}"`);
+  await ctx.reply("New conversation started. Ask me anything!\n\nUse /stop to exit.");
+
+  const messages: ChatCompletionRequestMessage[] = [];
+  while (true) {
+    // Wait for user message
+    const update = await conversation.waitFor("message:text");
+    // Check for termination message
+    if (update.msg.text.trim() == "/stop") {
+      conversation.log(`Terminated conversation conversation_uuid=${uuid}`);
+      await ctx.reply("Bye!");
+      break;
+    }
+
+    conversation.log(`Received user mesage in conversation conversation_uuid=${uuid} message=${update.msg.text}`);
+    messages.push({"role": "user", "content": update.msg.text});
+    const response = await conversation.external(() => ai.chat(messages));
+    if (response.status != 200) {
+      ctx.reply(`Error ${response.status}: ${response.message}`);
+      continue;
+    }
+    conversation.log(`Received assistant response in conversation conversation_uuid=${uuid} message=${response.message}`);
+    ctx.reply(response.message);
+    messages.push({"role": "assistant", "content": response.message});
+  }
+}
+
+bot.use(createConversation(conversationBuilder, "chat"));
+
+bot.command("start", async (ctx) => {
+  if (ctx.chat.type != "private" || !checkPermission(ctx, bot.api)) return;
+  // Enter conversation with ai assistant
+  await ctx.conversation.enter("chat");
+});
 
 // Handle /chat command
 bot.hears(/\/chat (.+)/, async (ctx) => {
@@ -25,7 +71,7 @@ bot.hears(/\/chat (.+)/, async (ctx) => {
   // Pretend that the bot is typing
   ctx.replyWithChatAction('typing');
   // Retrieve response from AI
-  const response = await ai.chat(message);
+  const response = await ai.chat([{"role": "user", "content": message}]);
   console.log(`Sending chat response: request_uuid=${uuid} status=${response.status} response=${response.message}`)
   ctx.reply(response.message);
 });
