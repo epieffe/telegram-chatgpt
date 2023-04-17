@@ -1,6 +1,18 @@
 
+import fs from 'fs';
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from 'openai';
 import { ChatResponse, DrawResponse } from './interfaces';
+
+const CHAT_PROMPT_PATH = process.env.CHAT_PROMPT_PATH || 'prompt.txt';
+
+let system_prompt;
+try {
+  system_prompt = fs.readFileSync(CHAT_PROMPT_PATH, 'utf8');
+  console.log(`Found custom ChatGPT prompt at ${CHAT_PROMPT_PATH}`)
+} catch (err) {
+  system_prompt = 'You are a virtual assistant. Give short but very detailed answers.';
+  console.warn(`Unable to find custom ChatGPT prompt, using default. reason=${err.message}`);
+}
 
 const openai = new OpenAIApi(new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -9,9 +21,9 @@ const openai = new OpenAIApi(new Configuration({
 export async function chat(messages: ChatCompletionRequestMessage[]): Promise<ChatResponse> {
 	try {
     const response = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
+      model: 'gpt-3.5-turbo',
       messages: [
-        {"role": "system", "content": "Sei un assistente virtuale."},
+        {'role': 'system', 'content': system_prompt},
         ...messages
       ]
     });
@@ -33,7 +45,7 @@ export async function draw(input_text: string): Promise<DrawResponse> {
     const response = await openai.createImage({
       prompt: input_text,
       n: 4,
-      size: "256x256",
+      size: '256x256',
     });
     const images = response.data.data.map(img => img.url);
     return { status: 200, images: images}
