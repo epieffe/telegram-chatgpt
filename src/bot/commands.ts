@@ -26,11 +26,13 @@ export async function drawCommand(ctx: Context) {
   // Check if user has permission to chat with the bot
   if (!checkPermission(ctx, bot.api)) return;
 
-  ctx.replyWithChatAction('upload_photo')
   // Generate randon unique identifier for this request
   const uuid = randomUUID();
   const message = ctx.match[1];
   console.log(`Received draw request: user_id=${ctx.from.id} username=${ctx.from.username} chat_id=${ctx.chat.id} chat_type=${ctx.chat.type} request_uuid=${uuid} message="${message}"`);
+
+  // Pretend the bot is uploading a photo
+  ctx.replyWithChatAction('upload_photo')
   // Retrieve images from AI
   const response = await ai.draw(message);
   console.log(`Sending draw response: request_uuid=${uuid} response=${JSON.stringify(response)}`)

@@ -2,7 +2,7 @@ import { ConversationFlavor, conversations, createConversation } from '@grammyjs
 import { Bot, Context, session } from "grammy";
 
 import { chatCommand, drawCommand } from './commands';
-import { chatConversation } from './conversations';
+import { chatConversation, drawConversation } from './conversations';
 import { checkPermission } from './util';
 
 const bot = new Bot<Context & ConversationFlavor>(process.env.TELEGRAM_TOKEN as string);
@@ -14,6 +14,7 @@ bot.use(conversations());
 
 // Register conversations
 bot.use(createConversation(chatConversation, "chat"));
+bot.use(createConversation(drawConversation, "draw"));
 
 // Handle /start command in private chat
 bot.chatType("private").command("start",async (ctx) => {
@@ -39,7 +40,8 @@ bot.chatType("private").command("chat", async (ctx) => {
 // Handle /draw command in private chat
 bot.chatType("private").command("draw", async (ctx) => {
   if (!checkPermission(ctx, bot.api)) return;
-  ctx.reply("Sorry, this feature is under development");
+  // Enter drawing conversation
+  await ctx.conversation.enter("draw");
 });
 
 // Handle /chat command in group chat
@@ -50,5 +52,5 @@ bot.hears(/\/draw (.+)/, drawCommand);
 
 // Log unknown messages
 bot.on('message', (ctx) => {
-  console.warn(`Unknown message: user_id=${ctx.from.id} username=${ctx.from.username} chat_id=${ctx.chat.id} chat_type=${ctx.chat.type} message="${ctx.message.text}"`);
+  console.debug(`Unknown message: user_id=${ctx.from.id} username=${ctx.from.username} chat_id=${ctx.chat.id} chat_type=${ctx.chat.type} message="${ctx.message.text}"`);
 })
