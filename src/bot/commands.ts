@@ -2,14 +2,9 @@ import { randomUUID } from 'crypto';
 import { Context } from "grammy";
 import { InputMediaPhoto } from 'grammy/types';
 
-import { checkPermission } from './util';
 import * as ai from '../ai/openai';
-import bot from '../bot/bot';
 
 export async function chatCommand(ctx: Context) {
-  // Check if user has permission to chat with the bot
-  if (!checkPermission(ctx, bot.api)) return;
-
   // Generate randon unique identifier for this request
   const uuid = randomUUID();
   const message = ctx.match[1];
@@ -23,9 +18,6 @@ export async function chatCommand(ctx: Context) {
 }
 
 export async function drawCommand(ctx: Context) {
-  // Check if user has permission to chat with the bot
-  if (!checkPermission(ctx, bot.api)) return;
-
   // Generate randon unique identifier for this request
   const uuid = randomUUID();
   const message = ctx.match[1];
