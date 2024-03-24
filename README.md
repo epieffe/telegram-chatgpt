@@ -1,113 +1,89 @@
-# node-typescript-boilerplate
+# OpenAI Telegram Bot
+[![Node.js](https://img.shields.io/badge/Node.js->=%2018-blue.svg)](https://nodejs.org)
+[![AGPLv3](https://img.shields.io/badge/license-AGPLv3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0.html)
 
-[![Sponsor][sponsor-badge]][sponsor]
-[![TypeScript version][ts-badge]][typescript-4-9]
-[![Node.js version][nodejs-badge]][nodejs]
-[![APLv2][license-badge]][license]
-[![Build Status - GitHub Actions][gha-badge]][gha-ci]
+Telegram bot backed by OpenAI [Chat Completions](https://platform.openai.com/docs/guides/text-generation/chat-completions-api) and [Image generations](https://platform.openai.com/docs/guides/images) API.
 
-👩🏻‍💻 Developer Ready: A comprehensive template. Works out of the box for most [Node.js][nodejs] projects.
+## Overview
 
-🏃🏽 Instant Value: All basic tools included and configured:
+#### Private chat commands
+- `/chat`: start a chat conversation
+- `/draw`: start a drawing conversation
+- `/exit`: exit current conversation
 
-- [TypeScript][typescript] [4.9][typescript-4-9]
-- [ESM][esm]
-- [ESLint][eslint] with some initial rules recommendation
-- [Jest][jest] for fast unit testing and code coverage
-- Type definitions for Node.js and Jest
-- [Prettier][prettier] to enforce consistent code style
-- NPM [scripts](#available-scripts) for common operations
-- [EditorConfig][editorconfig] for consistent coding style
-- Reproducible environments thanks to [Volta][volta]
-- Example configuration for [GitHub Actions][gh-actions]
-- Simple example of TypeScript code and unit test
+#### Group chat commands
+- `/chat <question>`: ask a question
+- `/draw <subject>`: generate an image
 
-🤲 Free as in speech: available under the APLv2 license.
+Conversations are not available in group chats, so the bot does not remember previously asked questions, while in private `/chat` conversations it remembers previous messages until you `/exit` the conversation.
 
 ## Getting Started
+To run the bot you need the following requirements:
+- [Node.js](https://nodejs.org) >= 18
+- A [Telegram](https://telegram.org) bot token
+- An [OpenAI](https://openai.com/product) API Key
 
-This project is intended to be used with the latest Active LTS release of [Node.js][nodejs].
+#### Obtain Telegram Bot Token
+Contact the [@BotFather](https://t.me/botfather) on Telegram, send the `/newbot` command and follow the steps.
 
-### Use as a repository template
+#### Obtain OpenAI API Key
+- Create an account on [platform.openai.com](https://platform.openai.com)
+- Navigate to the [Billing page](https://platform.openai.com/account/billing) and add credit to balance (minimum 5$ is required)
+- Navigate to the [API key page](https://platform.openai.com/api-keys) and create a new secret key
 
-To start, just click the **[Use template][repo-template-action]** link (or the green button). Start adding your code in the `src` and unit tests in the `__tests__` directories.
+### Environment Variables
+Environment variables can be read from the operating system or from a `.env` file in the current directory. You can use the `.env.example` file as a starting point to create your own `.env` file. Some variables are optional, while others are required for the bot to start properly.
+| Variable              | Description | Required |
+| --------------------- | ----------- | -------- |
+| TELEGRAM_TOKEN        | The Telegram bot token | true |
+| OPENAI_API_KEY        | The OpenAI API key | true |
+| CHAT_PROMPT_PATH      | Relative file path for a custom chat system prompt, defaults to `prompt.txt` | false |
+| WHITELISTED_GROUP_IDS | Comma separated ids of groups whose members are allowed to chat with the bot | false |
+| WHITELISTED_USER_IDS  | Comma separated ids of users allowed to chat with the bot | false |
 
-### Clone repository
-
-To clone the repository, use the following commands:
-
-```sh
-git clone https://github.com/jsynowiec/node-typescript-boilerplate
-cd node-typescript-boilerplate
+### Run the Bot
+Before running the bot for the first time you need to install the required dependencies:
+```bash
 npm install
 ```
-
-### Download latest release
-
-Download and unzip the current **main** branch or one of the tags:
-
-```sh
-wget https://github.com/jsynowiec/node-typescript-boilerplate/archive/main.zip -O node-typescript-boilerplate.zip
-unzip node-typescript-boilerplate.zip && rm node-typescript-boilerplate.zip
+Create a `.env` file or set the required environment variables in the operating system. If you want to create the `.env` file you can use the `.env.example` file as an example. If you want to use OS environment variables you can run the following commands on UNIX systems like Mac or Linux, replacing `<your token>` and `<your key>` with actual values:
+```bash
+export TELEGRAM_TOKEN=<your token>
+export OPENAI_API_KEY=<your key>
 ```
 
-## Available Scripts
+Now you are ready to start the bot:
+```bash
+npm start
+```
 
-- `clean` - remove coverage data, Jest cache and transpiled files,
-- `prebuild` - lint source files and tests before building,
-- `build` - transpile TypeScript to ES6,
-- `build:watch` - interactive watch mode to automatically transpile source files,
-- `lint` - lint source files and tests,
-- `prettier` - reformat files,
-- `test` - run tests,
-- `test:watch` - interactive watch mode to automatically re-run tests
+#### Production build
+For running in production it is better to use the `build` script to generate a production build
+```bash
+npm run build
+```
+Now run the generated build files using `node`:
+```bash
+node build/src/main.js
+```
 
-## Additional Information
+### Custom Chat System Prompt
+You can optionally define a system message to set the behavior of the bot during chats. For example, you can modify the personality of the bot or provide it with specific knowledge about your organization.
 
-### Why include Volta
+By default the bot searches for a system message in the `prompt.txt` file in the current directory during startup. If not found, no system message is used. To change the file path where to search the system message use the `CHAT_PROMPT_PATH` environment variable.
 
-[Volta][volta]’s toolchain always keeps track of where you are, it makes sure the tools you use always respect the settings of the project you’re working on. This means you don’t have to worry about changing the state of your installed software when switching between projects. For example, it's [used by engineers at LinkedIn][volta-tomdale] to standardize tools and have reproducible development environments.
+### Access Restrictions
+By default the bot is accessible to anyone. You can restrict the bot access to a limited set of users or to members of specific groups.
 
-I recommend to [install][volta-getting-started] Volta and use it to manage your project's toolchain.
+The bot is accessible to all the users listed in the `WHITELISTED_USER_IDS` environment variable AND to members of any of the groups listed in the `WHITELISTED_GROUP_IDS` environment variable. If none of these variables are set, then the bot is accessible to anyone.
 
-### ES Modules
+The bot needs to be member of all the groups listed in the `WHITELISTED_GROUP_IDS` environment variable.
 
-This template uses native [ESM][esm]. Make sure to read [this][nodejs-esm], and [this][ts47-esm] first.
+#### Get your user id
+The easiest way to get your user id is to contact the [@userinfobot](https://t.me/userinfobot), send a message and it will reply with your info, including the user id. Please note that I am not in any way affiliated with the @userinfobot and I am not responsible for how it works or how it manages data.
 
-If your project requires CommonJS, you will have to [convert to ESM][sindresorhus-esm].
-
-Please do not open issues for questions regarding CommonJS or ESM on this repo.
-
-## Backers & Sponsors
-
-Support this project by becoming a [sponsor][sponsor].
+#### Get group id
+Please  read [this thread on Stack Overflow](https://stackoverflow.com/questions/32423837/telegram-bot-how-to-get-a-group-chat-id) for usefull tips on how to get a group chat id.
 
 ## License
-
-Licensed under the APLv2. See the [LICENSE](https://github.com/jsynowiec/node-typescript-boilerplate/blob/main/LICENSE) file for details.
-
-[ts-badge]: https://img.shields.io/badge/TypeScript-4.9-blue.svg
-[nodejs-badge]: https://img.shields.io/badge/Node.js->=%2018.12-blue.svg
-[nodejs]: https://nodejs.org/dist/latest-v18.x/docs/api/
-[gha-badge]: https://github.com/jsynowiec/node-typescript-boilerplate/actions/workflows/nodejs.yml/badge.svg
-[gha-ci]: https://github.com/jsynowiec/node-typescript-boilerplate/actions/workflows/nodejs.yml
-[typescript]: https://www.typescriptlang.org/
-[typescript-4-9]: https://devblogs.microsoft.com/typescript/announcing-typescript-4-9/
-[license-badge]: https://img.shields.io/badge/license-APLv2-blue.svg
-[license]: https://github.com/jsynowiec/node-typescript-boilerplate/blob/main/LICENSE
-[sponsor-badge]: https://img.shields.io/badge/♥-Sponsor-fc0fb5.svg
-[sponsor]: https://github.com/sponsors/jsynowiec
-[jest]: https://facebook.github.io/jest/
-[eslint]: https://github.com/eslint/eslint
-[wiki-js-tests]: https://github.com/jsynowiec/node-typescript-boilerplate/wiki/Unit-tests-in-plain-JavaScript
-[prettier]: https://prettier.io
-[volta]: https://volta.sh
-[volta-getting-started]: https://docs.volta.sh/guide/getting-started
-[volta-tomdale]: https://twitter.com/tomdale/status/1162017336699838467?s=20
-[gh-actions]: https://github.com/features/actions
-[repo-template-action]: https://github.com/jsynowiec/node-typescript-boilerplate/generate
-[esm]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules
-[sindresorhus-esm]: https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c
-[nodejs-esm]: https://nodejs.org/docs/latest-v16.x/api/esm.html
-[ts47-esm]: https://devblogs.microsoft.com/typescript/announcing-typescript-4-9/#esm-nodejs
-[editorconfig]: https://editorconfig.org
+This work is licensed under the [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.html). Visit [Why the Affero GPL](https://www.gnu.org/licenses/why-affero-gpl.html) on gnu.org to know why.
