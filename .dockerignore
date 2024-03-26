@@ -1,0 +1,8 @@
+node_modules
+build
+.env
+.git
+**/prompt.txt
+npm-debug.log
+.coverage
+.coverage.*
