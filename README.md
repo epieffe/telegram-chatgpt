@@ -19,7 +19,7 @@ Conversations are not available in group chats, so the bot does not remember pre
 
 ## Getting Started
 To run the bot you need the following requirements:
-- [Node.js](https://nodejs.org) >= 18
+- [Node.js](https://nodejs.org) >= 18 (or Docker)
 - A [Telegram](https://telegram.org) bot token
 - An [OpenAI](https://openai.com/product) API Key
 
@@ -46,10 +46,10 @@ Before running the bot for the first time you need to install the required depen
 ```bash
 npm install
 ```
-Create a `.env` file or set the required environment variables in the operating system. If you want to create the `.env` file you can use the `.env.example` file as an example. If you want to use OS environment variables you can run the following commands on UNIX systems like Mac or Linux, replacing `<your token>` and `<your key>` with actual values:
+Create a `.env` file or set the required environment variables in the operating system. If you want to create the `.env` file you can use the `.env.example` file as an example. If you want to use OS environment variables you can run the following commands on UNIX systems like Mac or Linux, replacing `your-token` and `your-key` with actual values:
 ```bash
-export TELEGRAM_TOKEN=<your token>
-export OPENAI_API_KEY=<your key>
+export TELEGRAM_TOKEN=your-token
+export OPENAI_API_KEY=your-key
 ```
 
 Now you are ready to start the bot:
@@ -67,10 +67,26 @@ Now run the generated build files using `node`:
 node build/src/main.js
 ```
 
+#### Run with Docker
+You can use the `epieffeeth/telegram-openai` image on Docker Hub to run this bot using Docker:
+```bash
+docker run epieffeeth/telegram-openai \
+        -e TELEGRAM_TOKEN=your-token \
+        -e OPENAI_API_KEY=your-key
+```
+
 ### Custom Chat System Prompt
 You can optionally define a system message to set the behavior of the bot during chats. For example, you can modify the personality of the bot or provide it with specific knowledge about your organization.
 
 By default the bot searches for a system message in the `prompt.txt` file in the current directory during startup. If not found, no system message is used. To change the file path where to search the system message use the `CHAT_PROMPT_PATH` environment variable.
+
+If you run the bot with Docker place the prompt file under `/app/prompt.txt` in the container:
+```bash
+docker run epieffeeth/telegram-openai \
+        -e TELEGRAM_TOKEN=your-token \
+        -e OPENAI_API_KEY=your-key \
+        -v "$PWD/prompt.txt":/app/prompt.txt
+```
 
 ### Access Restrictions
 By default the bot is accessible to anyone. You can restrict the bot access to a limited set of users or to members of specific groups.
