@@ -1,6 +1,6 @@
 {
   "name": "telegram-openai",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Telegram bot backed by OpenAI API",
   "engines": {
     "node": ">= 18"
